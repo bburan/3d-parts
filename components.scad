@@ -3,43 +3,45 @@ $fn = 100;
 eps = 0.01;
 
 // --- SENSOR PARAMETERS ---
-ir_base_w = 7.08;
-ir_base_d = 3.7;
-ir_slot_w = 5.58;
-ir_slot_h = 6.5;
-ir_depth  = 22.5;
+ir_base_w = 7.08;										// width of slot that we slide IR sensor through
+ir_base_d = 3.7;										// depth of slot that we slide IR sensor through
+ir_slot_w = 5.58;										// width of slot that houses the actual IR sensor
+ir_slot_h = 6.5;										// height of slot that houses the actual IR sensor
 
-ir_hole_r   = 0.79;
-small_tap_drill_r = 1.0; 	// tap hole for small screws
-ir_offset_z = 1.72; 		// Offset of sensor hole from top of housing	
-housing_wall_thick  = 0.75;			// Minimum wall thickness of IR sensor housing
-housing_w = ir_base_w + (housing_wall_thick * 2);
-housing_d = ir_base_d + (housing_wall_thick * 2);
+ir_hole_r   = 0.79;										// Radius of hole for IR emittor dome
+small_tap_drill_r = 1.0; 								// tap hole for small screws to anchor pieces in place
+ir_offset_z = 1.72; 									// Offset of sensor hole from top of slot	
+housing_wall_thick  = 0.75;								// Minimum wall thickness of IR sensor housing
 
 // --- HOUSING/POKE PARAMETERS ---
-poke_h      = 30;
-poke_r      = 15 / 2;
-poke_wall   = 6;
-tap_drill_r = 5.1 / 2;
+poke_h      = 30;										// Total height of nose-poke
+poke_r      = 15 / 2;									// Inside radius of nose-poke
+poke_wall   = 6;										// Wall thickness
+tap_drill_r = 5.1 / 2;									// Hole size needed for nose poke mounting screw
 rounding_r  = poke_wall / 2;
 
 // Plate
-plate_t     = 2;
-plate_r     = 30;
+plate_t     = 5;										// Thickness of nose-poke plate
+plate_r     = 30;										// Radius of nose-poke plate
 
 // Bars/Clamps
-bar_spacing = 16.5;
-bar_gap     = 40;   
-bar_d       = 6.35;
-bar_h       = 10;
-bar_wall    = 1.5;
+bar_spacing = 16.5;										// Spacing of cage bars
+bar_gap     = 40;   									// Vertical gap between cage bars
+bar_d       = 6.35;										// Diameter of cage bars
+bar_h       = 10;										// Length of cage bar clamp
+bar_wall    = 1.5;										// Thickness of cage bar clamp
 
 // --- SENSOR CONFIGURATION ---
+// First number is depth of IR sensor slot, second number is radius around the nose-poke
 sensor_configs = [
     [20,   0],   
     [22.5, 60],  
     [25,   120]  
 ];
+
+// Defines dimensions of IR sensor housing
+housing_w = ir_base_w + (housing_wall_thick * 2);
+housing_d = ir_base_d + (housing_wall_thick * 2);
 
 
 // --- MODULES ---
