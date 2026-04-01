@@ -1,5 +1,5 @@
 // --- GLOBAL SETTINGS ---
-$fn = 64;
+$fn = 100; // Increased for a much smoother curve
 eps = 0.01; 
 
 // --- SENSOR PARAMETERS ---
@@ -20,6 +20,9 @@ poke_r      = 15 / 2;
 poke_wall   = 6;
 tap_drill_r = 5.1 / 2; 
 
+// The radius of our "rounding" is exactly half the wall thickness
+rounding_r = poke_wall / 2;
+
 // --- SENSOR CONFIGURATION ---
 // [Internal_Channel_Height, Rotation_Angle]
 // "Internal_Channel_Height" is the distance from the base to the top of the sensor.
@@ -37,34 +40,25 @@ housing_d = ir_base_d + (wall_thick * 2);
 
 // --- MODULES ---
 
-module sensor_cutout(h_val) {
+module sensor_cutout(depth) {
     translate([-ir_base_w/2, 0, 0]) {
-        // Base track (Vertical channel for sensor)
-        cube([ir_base_w, ir_base_d, h_val - ir_slot_h + eps]);
-        
-        // Top slot housing
-        translate([(ir_base_w - ir_slot_w)/2, 0, h_val - ir_slot_h])
+        cube([ir_base_w, ir_base_d, depth - ir_slot_h + eps]);
+        translate([(ir_base_w - ir_slot_w)/2, 0, depth - ir_slot_h])
             cube([ir_slot_w, ir_base_d, ir_slot_h + eps]);
         
-        // IR Beam Center (Emitter/Receiver Hole)
-        translate([ir_base_w/2, 0, h_val - ir_offset_z])
-            rotate([90, 0, 0]) 
-                cylinder(h = 10, r = ir_hole_r, center = true);
-        
-        // Mechanical Support / Screw Hole
-        translate([ir_base_w/2, ir_base_d, h_val - ir_offset_z])
-            rotate([90, 0, 0]) 
-                cylinder(h = 10, r = ir_screw_r, center = true);
+        for(y_off = [0, ir_base_d]) {
+            r_val = (y_off == 0) ? ir_hole_r : ir_screw_r;
+            translate([ir_base_w/2, y_off, depth - ir_offset_z])
+                rotate([90, 0, 0]) cylinder(h = 10, r = r_val, center = true);
+        }
     }
 }
 
-module sensor_block(h_val) {
-    // Adds wall thickness to the height of the internal channel
+module sensor_block(depth) {
     translate([-housing_w/2, 0, 0])
-        cube([housing_w, housing_d, h_val + (wall_thick * 2)]);
+        cube([housing_w, housing_d, depth + (wall_thick * 2)]);
 }
 
-// Wrapper to automatically handle opposing pairs
 module place_opposing_pair(angle) {
     for (a = [0, 180]) rotate([0, 0, angle + a]) children();
 }
@@ -74,11 +68,25 @@ module place_opposing_pair(angle) {
 difference() {
     // 1. ADDITIVE GEOMETRY
     union() {
-        // Main Poke Body
-        difference() {
-            cylinder(h = poke_h, r = poke_r + poke_wall);
-            translate([0, 0, -eps]) 
-                cylinder(h = poke_h + (eps * 2), r = poke_r);
+        // Main Poke Body (Cylinder + Semicircle Torus)
+        union() {
+            // Lower body (Height adjusted to stop where rounding begins)
+            difference() {
+                cylinder(h = poke_h - rounding_r, r = poke_r + poke_wall);
+                translate([0, 0, -eps]) 
+                    cylinder(h = poke_h, r = poke_r);
+            }
+            
+            // The Rounded Rim (Torus)
+            translate([0, 0, poke_h - rounding_r])
+            rotate_extrude()
+            translate([poke_r + rounding_r, 0, 0])
+            intersection() {
+                // We use an intersection to ensure we only keep the top semicircle
+                circle(r = rounding_r);
+                translate([-rounding_r, 0]) 
+                    square([rounding_r * 2, rounding_r]);
+            }
         }
         
         // Bottom Plate
@@ -86,26 +94,24 @@ difference() {
 
         // Housing Blocks
         for (config = sensor_configs) {
-            h_val = config[0];
+            depth = config[0];
             angle = config[1];
             place_opposing_pair(angle)
-                translate([0, poke_r, 0]) 
-                    sensor_block(h_val);
+                translate([0, poke_r, 0]) sensor_block(depth);
         }
     }
 
     // 2. SUBTRACTIVE GEOMETRY
-    
-    // Bottom Plate Tap Hole (1/4"-20)
+
+    // Bottom Plate Tap Hole
     translate([0, 0, -eps]) 
         cylinder(h = poke_wall + (eps * 2), r = tap_drill_r);
 
-    // Internal Sensor Cutouts
+    // Sensor Cutouts
     for (config = sensor_configs) {
-        h_val = config[0];
+        depth = config[0];
         angle = config[1];
         place_opposing_pair(angle)
-            translate([0, poke_r + wall_thick, -eps]) 
-                sensor_cutout(h_val);
+            translate([0, poke_r + wall_thick, -eps]) sensor_cutout(depth);
     }
 }
