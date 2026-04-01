@@ -10,9 +10,11 @@ ir_slot_h = 6.5;
 ir_depth  = 22.5;
 
 ir_hole_r   = 0.79;
-small_tap_drill_r = 1.0; // Renamed from ir_screw_r 
-ir_offset_z = 1.72;
-wall_thick  = 0.75;
+small_tap_drill_r = 1.0; 	// tap hole for small screws
+ir_offset_z = 1.72; 		// Offset of sensor hole from top of housing	
+housing_wall_thick  = 0.75;			// Minimum wall thickness of IR sensor housing
+housing_w = ir_base_w + (housing_wall_thick * 2);
+housing_d = ir_base_d + (housing_wall_thick * 2);
 
 // --- HOUSING/POKE PARAMETERS ---
 poke_h      = 30;
@@ -39,8 +41,6 @@ sensor_configs = [
     [25,   120]  
 ];
 
-housing_w = ir_base_w + (wall_thick * 2);
-housing_d = ir_base_d + (wall_thick * 2);
 
 // --- MODULES ---
 
@@ -52,14 +52,14 @@ module sensor_cutout(depth) {
         for(y_off = [0, ir_base_d]) {
             r_val = (y_off == 0) ? ir_hole_r : small_tap_drill_r;
             translate([ir_base_w/2, y_off, depth - ir_offset_z])
-                rotate([90, 0, 0]) cylinder(h = 10, r = r_val, center = true);
+                rotate([90, 0, 0]) cylinder(h = 5, r = r_val, center = true);
         }
     }
 }
 
 module sensor_block(depth) {
     translate([-housing_w/2, 0, 0])
-        cube([housing_w, housing_d, depth + (wall_thick * 2)]);
+        cube([housing_w, housing_d, depth + (housing_wall_thick * 2)]);
 }
 
 module place_opposing_pair(angle) {
@@ -104,7 +104,7 @@ module nose_poke() {
             depth = config[0];
             angle = config[1];
             place_opposing_pair(angle)
-                translate([0, poke_r + wall_thick, -eps]) sensor_cutout(depth);
+                translate([0, poke_r + housing_wall_thick, -eps]) sensor_cutout(depth);
         }
     }
 }
